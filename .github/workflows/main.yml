@@ -1,4 +1,4 @@
-name: Run Python Script
+name: Usage Analytics Workflow
 
 on: workflow_dispatch
 
@@ -21,7 +21,22 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run Python script
-        env:
-          username: ${{ secrets.username }}
-          password: ${{ secrets.password }}
-        run: python main.py
+        run: python data-extraction.py
+
+      - name: Run validation script
+        run: python metric-validation.py
+
+      - name: Run post-processing script
+        run: python post-processing.py
+
+      - name: Wait for manual approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: Aaquiff
+          minimum-approvals: 1
+          issue-title: "Approval required to proceed with release"
+          issue-body: "Please approve to continue to the release step."
+
+      - name: Run release-ready script
+        run: python release_ready.py
